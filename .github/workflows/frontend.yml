@@ -1,0 +1,64 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [main, dev, production]
+  pull_request:
+    branches: [main, dev, production]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  frontend:
+    name: Frontend Build & Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # Install deps
+      - name: Install dependencies
+        run: npm ci
+
+      # Run tests with coverage
+      - name: Run tests
+        run: npm test -- --coverage --watchAll=false --ci
+
+      # Create sonar config
+      - name: Create sonar properties
+        run: |
+          cat > sonar-project.properties << 'EOL'
+          sonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          sonar.projectName=Frontend App
+          sonar.sources=src
+          sonar.tests=src
+          sonar.test.inclusions=**/*.test.js,**/*.test.tsx
+          sonar.exclusions=**/node_modules/**,**/coverage/**
+          sonar.javascript.lcov.reportPaths=coverage/lcov.info
+          sonar.sourceEncoding=UTF-8
+          EOL
+
+      # SonarCloud scan
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Snyk scan (dependency vulnerabilities)
+      - name: Snyk Scan
+        uses: snyk/actions/node@master
+        with:
+          command: test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
