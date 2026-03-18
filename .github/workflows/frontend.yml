@@ -24,13 +24,14 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+          cache-dependency-path: frontend-react/package-lock.json
 
-      # Install deps
       - name: Install dependencies
+        working-directory: frontend-react
         run: npm ci
 
-      # Run tests with coverage
       - name: Run tests
+        working-directory: frontend-react
         run: npm test -- --coverage --watchAll=false --ci
 
       # Create sonar config
@@ -40,14 +41,14 @@ jobs:
           sonar.organization=${{ secrets.SONAR_ORGANIZATION }}
           sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
           sonar.projectName=Frontend App
-          sonar.sources=src
-          sonar.tests=src
+          sonar.sources=frontend-react/src
+          sonar.tests=frontend-react/src
           sonar.test.inclusions=**/*.test.js,**/*.test.tsx
           sonar.exclusions=**/node_modules/**,**/coverage/**
-          sonar.javascript.lcov.reportPaths=coverage/lcov.info
+          sonar.javascript.lcov.reportPaths=frontend-react/coverage/lcov.info
           sonar.sourceEncoding=UTF-8
           EOL
-
+          
       # SonarCloud scan
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
@@ -57,8 +58,7 @@ jobs:
 
       # Snyk scan (dependency vulnerabilities)
       - name: Snyk Scan
-        uses: snyk/actions/node@master
-        with:
-          command: test
+        run: snyk test
+        working-directory: frontend-react
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
