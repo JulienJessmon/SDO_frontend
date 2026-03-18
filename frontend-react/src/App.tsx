@@ -32,6 +32,9 @@ const App: React.FC = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState<number | null>(null);
   const [enrollingCourse, setEnrollingCourse] = useState(false);
 
+  // vulnerable hardcoded api key
+  const apiKey = "secret123";
+
   useEffect(() => {
     const initializeSession = async () => {
       const token = localStorage.getItem('token');
