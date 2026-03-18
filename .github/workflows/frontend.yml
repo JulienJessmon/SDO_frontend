@@ -57,6 +57,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # Snyk scan (dependency vulnerabilities)
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
       - name: Snyk Scan
         run: snyk test
         working-directory: frontend-react
