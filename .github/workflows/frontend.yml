@@ -59,9 +59,8 @@ jobs:
       # Snyk scan (dependency vulnerabilities)
       - name: Install Snyk CLI
         run: npm install -g snyk
-
       - name: Snyk Scan
-        run: snyk test
+        run: snyk test --org=${{ secrets.SNYK_ORG_ID }} --severity-threshold=critical
         working-directory: frontend-react
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
